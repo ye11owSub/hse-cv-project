@@ -1,0 +1,22 @@
+[project]
+name = "hse-cv-project"
+dynamic = ["version"]
+requires-python = ">= 3.10"
+dependencies = [
+    "numpy==1.26.4",
+    "opencv-python==4.9.0.80",
+    "pillow==10.3.0",
+    "tensorflow==2.16.1",
+]
+
+[build-system]
+requires = [
+    "build",
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "./VERSION.txt"
+local_scheme = "no-local-version"
