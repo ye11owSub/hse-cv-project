@@ -1,0 +1,34 @@
+name: hse cv project
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        make venv &&\
+        source venv/bin/activate &&\
+        make develop
+    - name: Lint
+      run: |
+        make lint
+    - name: Test with pytest
+      run: |
+        make test
+
