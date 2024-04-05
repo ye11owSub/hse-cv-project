@@ -24,7 +24,7 @@ show-version: ## Show current and next version
 	@echo "next version: $(NEXT_VERSION)"
 
 
-PN := hse-cv-project
+PN := hse_cv_project
 PV := `python setup.py -q --version`
 
 SHELL  := /bin/sh
@@ -33,8 +33,11 @@ SYSTEM_PYTHON := $(shell which python3)
 PYTHON        := venv/bin/python
 PIP           := $(PYTHON) -m pip
 MYPY          := $(PYTHON) -m mypy
-FLAKE8        := $(PYTHON) -m flake8
 PYTEST        := $(PYTHON) -m pytest
+
+LINT_TARGET := setup.py src/ tests/
+MYPY_TARGET := src/${PN} tests/
+
 
 venv: ## Create venv
 	$(SYSTEM_PYTHON) -m venv venv
@@ -81,15 +84,6 @@ dist-wheel:
 	@${PYTHON} setup.py bdist_wheel
 
 
-.PHONY: dist-egg
-# target: dist-egg - Build egg artifact
-dist-egg:
-	@rm dist/*.egg share/dmp/*.egg || echo "No eggs to remove"
-	@${PYTHON} setup.py bdist_egg
-	@cp dist/*.egg share/dmp/
-
-
-.PHONY: distcheck
 # target: distcheck - Verify distributed artifacts
 distcheck: distcheck-clean sdist
 	@mkdir -p dist/$(PN)
@@ -104,6 +98,66 @@ distcheck: distcheck-clean sdist
 distcheck-clean:
 	@rm -rf dist/$(PN)
 
+.PHONY: format
+# target: format - Format the code according to the coding styles
+format: format-black format-isort format-ruff
+
+
+.PHONY: format-black
+format-black:
+	@black ${LINT_TARGET}
+
+
+.PHONY: format-isort
+format-isort:
+	@isort ${LINT_TARGET}
+
+.PHONY: format-ruff
+format-ruff:
+	@ruff format ${LINT_TARGET}
+
+
+.PHONY: lint
+# target: lint - Check source code with linters
+lint: lint-isort lint-black lint-mypy lint-ruff
+
+
+.PHONY: lint-black
+lint-black:
+	@${PYTHON} -m black --check --diff ${LINT_TARGET}
+
+
+.PHONY: lint-isort
+lint-isort:
+	@${PYTHON} -m isort.main -c  ${LINT_TARGET}
+
+
+.PHONY: lint-mypy
+lint-mypy:
+	@${MYPY} ${MYPY_TARGET}
+
+
+.PHONY: lint-ruff
+lint-ruff:
+	@${PYTHON} -m ruff check ${LINT_TARGET}
+
+
+.PHONY: purge
+# target: purge - Remove all unversioned files and reset working copy
+purge:
+	@git reset --hard HEAD
+	@git clean -xdff
+
+
+.PHONY: report-coverage
+# target: report-coverage - Print coverage report
+report-coverage:
+	@${PYTHON} -m coverage report
+
+.PHONY: test
+# target: test - Run tests
+test:
+	@${PYTEST} -s -v tests
 
 .PHONY: install
 # target: install - Install the project
