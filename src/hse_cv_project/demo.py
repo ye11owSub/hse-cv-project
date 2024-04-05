@@ -2,11 +2,8 @@ import argparse
 import time
 
 import cv2
-import numpy as np
-from PIL import Image
 
 from hse_cv_project.interface import Yolov5Tflite
-from hse_cv_project.utils import letterbox_image, scale_coords
 
 
 def detect_video(weights, webcam, img_size, conf_thres, iou_thres):
@@ -29,58 +26,18 @@ def detect_video(weights, webcam, img_size, conf_thres, iou_thres):
 
         if not check:
             break
+        predicted_image = yolov5_tflite_obj.generete_predicted_image(frame, size, w, h)
 
-        image_resized = letterbox_image(Image.fromarray(frame), size)
-        image_array = np.asarray(image_resized)
+        out.write(predicted_image)
 
-        normalized_image_array = image_array.astype(np.float32) / 255.0
-        result_boxes, result_scores, result_class_names = yolov5_tflite_obj.detect(normalized_image_array)
-
-        if len(result_boxes) > 0:
-            result_boxes = scale_coords(size, np.array(result_boxes), (w, h))
-            font = cv2.FONT_HERSHEY_SIMPLEX
-
-            # org
-            org = (20, 40)
-
-            # fontScale
-            fontScale = 0.5
-
-            # Blue color in BGR
-            color = (0, 255, 0)
-
-            # Line thickness of 1 px
-            thickness = 1
-
-            for i, r in enumerate(result_boxes):
-                org = (int(r[0]), int(r[1]))
-                cv2.rectangle(
-                    frame,
-                    (int(r[0]), int(r[1])),
-                    (int(r[2]), int(r[3])),
-                    (255, 0, 0),
-                    1,
-                )
-                cv2.putText(
-                    frame,
-                    str(int(100 * result_scores[i])) + "%  " + str(result_class_names[i]),
-                    org,
-                    font,
-                    fontScale,
-                    color,
-                    thickness,
-                    cv2.LINE_AA,
-                )
-
-        out.write(frame)
-
-        cv2.imshow("output", frame)
+        cv2.imshow("output", predicted_image)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
         end_time = time.time()
         print("FPS:", 1 / (end_time - start_time))
         start_time = end_time
     out.release()
+    video.release()
 
 
 if __name__ == "__main__":

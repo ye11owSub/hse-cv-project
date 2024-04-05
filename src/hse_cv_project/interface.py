@@ -1,5 +1,10 @@
+import cv2
 import numpy as np
 import tensorflow as tf
+from cv2.typing import MatLike
+from PIL import Image
+
+from hse_cv_project.utils import letterbox_image, scale_coords
 
 CLASS_NAMES = [
     "person",
@@ -207,3 +212,48 @@ class Yolov5Tflite:
         result_boxes, result_scores, result_class_names = self.nms(pred)
 
         return result_boxes, result_scores, result_class_names
+
+    def generete_predicted_image(self, image: MatLike, size: tuple[int, int], width: int, height: int) -> MatLike:
+        image_resized = letterbox_image(Image.fromarray(image), size)
+        image_array = np.asarray(image_resized)
+
+        normalized_image_array = image_array.astype(np.float32) / 255.0
+        result_boxes, result_scores, result_class_names = self.detect(normalized_image_array)
+
+        if len(result_boxes) > 0:
+            result_boxes = scale_coords(size, np.array(result_boxes), (width, height))
+            font = cv2.FONT_HERSHEY_SIMPLEX
+
+            # org
+            org = (20, 40)
+
+            # fontScale
+            fontScale = 0.5
+
+            # Blue color in BGR
+            color = (0, 255, 0)
+
+            # Line thickness of 1 px
+            thickness = 1
+
+            for i, r in enumerate(result_boxes):
+                org = (int(r[0]), int(r[1]))
+                cv2.rectangle(
+                    image,
+                    (int(r[0]), int(r[1])),
+                    (int(r[2]), int(r[3])),
+                    (255, 0, 0),
+                    1,
+                )
+                cv2.putText(
+                    image,
+                    str(int(100 * result_scores[i])) + "%  " + str(result_class_names[i]),
+                    org,
+                    font,
+                    fontScale,
+                    color,
+                    thickness,
+                    cv2.LINE_AA,
+                )
+
+        return image
