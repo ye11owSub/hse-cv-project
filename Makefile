@@ -25,7 +25,6 @@ show-version: ## Show current and next version
 
 
 PN := hse_cv_project
-PV := `python setup.py -q --version`
 
 SHELL  := /bin/sh
 
@@ -35,7 +34,7 @@ PIP           := $(PYTHON) -m pip
 MYPY          := $(PYTHON) -m mypy
 PYTEST        := $(PYTHON) -m pytest
 
-LINT_TARGET := setup.py src/ tests/
+LINT_TARGET := src/ tests/
 MYPY_TARGET := src/${PN} tests/
 
 
@@ -52,7 +51,6 @@ run:
 .PHONY: clean
 # target: clean - Remove intermediate and generated files
 clean:
-	@${PYTHON} setup.py clean
 	@find . -type f -name '*.py[co]' -delete
 	@find . -type d -name '__pycache__' -delete
 	@rm -rf {build,htmlcov,cover,coverage,dist,.coverage,.hypothesis}
@@ -67,31 +65,6 @@ develop:
 	@${PYTHON} -m pip install -e .[develop]
 
 
-.PHONY: dist
-# target: dist - Build all artifacts
-dist: dist-sdist dist-wheel dist-egg
-
-
-.PHONY: dist-sdist
-# target: dist-sdist - Build sdist artifact
-dist-sdist:
-	@${PYTHON} setup.py sdist
-
-
-.PHONY: dist-wheel
-# target: dist-wheel - Build wheel artifact
-dist-wheel:
-	@${PYTHON} setup.py bdist_wheel
-
-
-# target: distcheck - Verify distributed artifacts
-distcheck: distcheck-clean sdist
-	@mkdir -p dist/$(PN)
-	@tar -xf dist/$(PN)-$(PV).tar.gz -C dist/$(PN) --strip-components=1
-	@$(MAKE) -C dist/$(PN) venv
-	. dist/$(PN)/venv/bin/activate && $(MAKE) -C dist/$(PN) develop
-	. dist/$(PN)/venv/bin/activate && $(MAKE) -C dist/$(PN) check
-	@rm -rf dist/$(PN)
 
 
 .PHONY: distcheck-clean

@@ -1,15 +1,24 @@
 # hse-cv-project
 
 
-to build project simply run futher commands:
+## To build project simply run futher commands:
 ```bash
 make venv
 source venv/bin/activate
 make develop
 ```
 
-to get test video run:
+## To get test video run:
 ```bash
 make run
 ```
 
+## Run with Docker
+
+```bash
+docker build -t streamlit .
+```
+
+```bash
+docker run -p 8501:8501 streamlit
+```
